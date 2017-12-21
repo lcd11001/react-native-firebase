@@ -20,6 +20,43 @@ export default class Register extends Component {
         };
 
         this.register = this.register.bind(this);
+        this.sendVerify = this.sendVerify.bind(this);
+    }
+
+    sendVerify() {
+        const { navigate } = this.props.navigation;
+        const self = this;
+
+        var user = firebaseApp.auth().currentUser;
+        user.sendEmailVerification()
+            .then(function() {
+                Alert.alert(
+                    'Register Account',
+                    'Your account has been registered successful!\nA verify email has been sent to your inbox',
+                    [
+                        {
+                            text: 'OK', 
+                            onPress: () => navigate('Login', { email: self.state.emailText, pass: self.state.passText })
+                        },
+                    ],
+                    { cancelable: false }
+                )
+            })
+            .catch(function(error) {
+                var errorCode = error.code;
+                var errorMessage = error.message;
+                Alert.alert(
+                    'Register Account',
+                    'Your account has been registered successful!\nA verify email has NOT been sent to your inbox.\n' + errorMessage,
+                    [
+                        {
+                            text: 'SEND AGAIN', 
+                            onPress: () => self.sendVerify()
+                        },
+                    ],
+                    { cancelable: false }
+                )
+            });
     }
 
     register() {
@@ -30,17 +67,17 @@ export default class Register extends Component {
             .auth()
             .createUserWithEmailAndPassword(this.state.emailText, this.state.passText)
             .then(function(success){
-                Alert.alert(
-                    'Register Account',
-                    'Your account has been registered successful!',
-                    [
-                        {
-                            text: 'OK', 
-                            onPress: () => navigate('Login', { email: self.state.emailText, pass: self.state.passText })
-                        },
-                    ],
-                    { cancelable: false }
-                )
+                var user = firebaseApp.auth().currentUser;
+                var emailVerified = false;
+                if (user != null) {
+                    emailVerified = user.emailVerified;
+                }
+
+                if (emailVerified) {
+                    navigate('Login', { email: self.state.emailText, pass: self.state.passText });
+                } else {
+                    self.sendVerify();
+                }
             })
             .catch(function(error) {
                 // Handle Errors here.

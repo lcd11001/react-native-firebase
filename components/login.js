@@ -29,7 +29,27 @@ export default class Login extends Component {
             .auth()
             .signInWithEmailAndPassword(this.state.emailText, this.state.passText)
             .then(function(success) {
-                navigate('MainMenu', { user: self.state.emailText });
+                var user = firebaseApp.auth().currentUser;
+                var emailVerified = false;
+                if (user != null) {
+                    emailVerified = user.emailVerified;
+                }
+
+                if (emailVerified) {
+                    navigate('MainMenu', { user: self.state.emailText });
+                } else {
+                    Alert.alert(
+                        'VERIFY ACCOUNT',
+                        'A verify email has been sent to your inbox.\nPlease check it!',
+                        [
+                            {
+                                text: 'OK', 
+                                onPress: () => console.log('OK Pressed')
+                            },
+                        ],
+                        { cancelable: false }
+                    )
+                }
             })
             .catch(function(error) {
                 // Handle Errors here.
